@@ -38,11 +38,41 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
      */
     //caller->running_list
     //caller->mlq_ready_queu
+    struct pcb_t **prev = &(caller->running_list);
+    struct pcb_t *cur = caller->running_list;
+
+    while (cur != NULL) {
+        if (strcmp(cur->path, proc_name) == 0) {
+            *prev = cur->running_list;  
+            free(cur);  
+            cur = *prev;  
+        } 
+        
+        else {
+            prev = &(cur->running_list);
+            cur = cur->running_list;
+        }
+    }
 
     /* TODO Maching and terminating 
      *       all processes with given
      *        name in var proc_name
      */
+    for (int prio = 0; prio < MAX_PRIO; prio++) {
+        struct queue_t *queue = &(caller->mlq_ready_queue[prio]); 
 
+        int new_size = 0; 
+        for (int j = 0; j < queue->size; j++) {
+            if (strcmp(queue->proc[j]->path, proc_name) == 0) {
+                free(queue->proc[j]); 
+            } 
+            
+            else {
+                queue->proc[new_size++] = queue->proc[j]; 
+            }
+        }
+        queue->size = new_size; 
+    }
+    
     return 0; 
 }
