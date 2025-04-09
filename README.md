@@ -5,8 +5,9 @@ Hoặc là mọi người clone về rồi push lên cũng được:   https://w
 https://www.youtube.com/watch?v=QE_mkDiu4hE
 
 ---
+Đã chỉnh repo sang private 9/4/2025.(mọi người chịu khó fork lại do nó sẽ xoá liên kết với những cái fork public trước đây).
 
-PS: Sau khi fork, nhớ gửi *pull request* và kèm theo đặc tả nội dung update. 
+PS: Sau khi fork, nhớ gửi *pull request* và kèm theo đặc tả nội dung update.
 
 ---
 
