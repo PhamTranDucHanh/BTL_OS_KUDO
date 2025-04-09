@@ -158,11 +158,33 @@ int MEMPHY_get_freefp(struct memphy_struct *mp, int *retfpn)
    return 0;
 }
 
-int MEMPHY_dump(struct memphy_struct *mp)
+int MEMPHY_dump(struct memphy_struct * mp)
 {
-  /*TODO dump memphy contnt mp->storage
-   *     for tracing the memory content
-   */
+    /*TODO dump memphy contnt mp->storage
+     *     for tracing the memory content
+     */
+
+   for (int i = 0; i < mp->maxsz; i++) {
+      if (mp->storage[i] != 0) {
+         printf("|%d -- %d\n", i, mp->storage[i]);
+      }
+   }
+
+    return 0;
+}
+
+int RAM_dump(struct memphy_struct * mram) {
+   int f = 0;
+   struct framephy_struct *fpit = mram->free_fp_list;
+   while (fpit != NULL) {
+      fpit = fpit->fp_next;
+      f++;
+   }
+   printf(" RAM mapping \n");
+   printf(" Number of mapped frames:   %d\n", mram->maxsz / PAGING_PAGESZ - f);
+   printf(" Number of remaining frames:\t%d\n", f);
+   printf("--------------------\n");
+
    return 0;
 }
 
