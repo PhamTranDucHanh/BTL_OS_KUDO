@@ -1,4 +1,3 @@
-
 #include "queue.h"
 #include "sched.h"
 #include <pthread.h>
@@ -96,8 +95,10 @@ void put_proc(struct pcb_t * proc) {
 	proc->running_list = & running_list;
 
 	/* TODO: put running proc to running_list */
-        pthread_mutex_lock(&queue_lock);
-	enqueue(&running_list, proc);
+    	pthread_mutex_lock(&queue_lock);
+	if (running_list.size < MAX_QUEUE_SIZE) {  // Assuming MAX_QUEUE_SIZE is defined
+		enqueue(&running_list, proc);
+	}
 	pthread_mutex_unlock(&queue_lock);
 	return put_mlq_proc(proc);
 }
@@ -105,11 +106,13 @@ void put_proc(struct pcb_t * proc) {
 void add_proc(struct pcb_t * proc) {
 	proc->ready_queue = &ready_queue;
 	proc->mlq_ready_queue = mlq_ready_queue;
-	proc->running_list = & running_list;
+	proc->running_list = &running_list;
 
 	/* TODO: put running proc to running_list */
-        pthread_mutex_lock(&queue_lock);
-	enqueue(&running_list, proc);
+    	pthread_mutex_lock(&queue_lock);
+	if (running_list.size < MAX_QUEUE_SIZE) {  // Assuming MAX_QUEUE_SIZE is defined
+		enqueue(&running_list, proc);
+	}
 	pthread_mutex_unlock(&queue_lock);
 	return add_mlq_proc(proc);
 }
@@ -135,7 +138,9 @@ void put_proc(struct pcb_t * proc) {
 	/* TODO: put running proc to running_list */
 
 	pthread_mutex_lock(&queue_lock);
-	enqueue(&running_list, proc);
+	if (running_list.size < MAX_QUEUE_SIZE) {  // Assuming MAX_QUEUE_SIZE is defined
+		enqueue(&running_list, proc);
+	}
 	pthread_mutex_unlock(&queue_lock);
 
 	pthread_mutex_lock(&queue_lock);
@@ -150,7 +155,9 @@ void add_proc(struct pcb_t * proc) {
 	/* TODO: put running proc to running_list */
 
 	pthread_mutex_lock(&queue_lock);
-	enqueue(&running_list, proc);
+	if (running_list.size < MAX_QUEUE_SIZE) {  // Assuming MAX_QUEUE_SIZE is defined
+		enqueue(&running_list, proc);
+	}
 	pthread_mutex_unlock(&queue_lock);
 
 	pthread_mutex_lock(&queue_lock);
@@ -158,4 +165,5 @@ void add_proc(struct pcb_t * proc) {
 	pthread_mutex_unlock(&queue_lock);	
 }
 #endif
+
 
