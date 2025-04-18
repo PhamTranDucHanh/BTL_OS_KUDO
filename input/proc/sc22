@@ -1,0 +1,12 @@
+20 11
+alloc 100 1
+write 80 1 0
+write 48 1 1
+write -1 1 2
+calc
+calc
+calc
+calc
+calc
+calc
+calc

@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "pthread.h": "c"
+        "pthread.h": "c",
+        "stdio.h": "c",
+        "os-cfg.h": "c",
+        "stdint.h": "c"
     }
 }
