@@ -87,13 +87,16 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
             if(byte_data == -1) victim_name[idx]='\0';
             idx++;
         }
-        printf("=====VICTIM NAME: %s \n", victim_name);
-        printf("=====VICTIM NAME: %s ======\n", victim_name);
 
         if(strcmp(proc_name, victim_name) == 0){
-            printf("Kill process with pid: %d \n", victim->pid);  //print to debug 
+            printf("###############=VICTIM NAME: %s =###############\n", victim_name);
+            printf("Killing process with pid: %d \n", victim->pid);  //print to debug 
             libfree(victim, memrg);             //free the allocate memory
             free(victim);                       //free the all structure of victim process
+            printf("###############======DONE KILLING======###############\n");
+        }
+        else{
+            enqueue(caller->running_list, victim);
         }
 
         victim = dequeue(&caller->running_list);  // tiếp tục vòng lặp
@@ -112,20 +115,48 @@ for(int prio = 0; prio < MAX_PRIO; prio++){                 //traverse mlq_queue
             if(byte_data == -1) victim_name[idx]='\0';
             idx++;
         }
-        printf("=====VICTIM NAME: %s ======\n", victim_name);
 
         if(strcmp(proc_name, victim_name) == 0){
-            printf("Kill process with pid: %d \n", mlq_victim->pid);  //print to debug 
+            printf("###############=VICTIM NAME: %s =###############\n", victim_name);
+            printf("Killing process with pid: %d \n", mlq_victim->pid);  //print to debug 
             libfree(mlq_victim, memrg);             //free the allocate memory
             free(mlq_victim);                       //free the all structure of victim process
+            printf("###############======DONE KILLING======###############\n");
         }
-
+        else{
+            enqueue(&caller->mlq_ready_queue[prio], mlq_victim);
+        }
         mlq_victim = dequeue(&caller->mlq_ready_queue[prio]);  //next
     }
 }
 
 #else
-//chưa hoàn thiện tới
+//Tương tự như trường hợp running queue thôi
+    struct pcb_t * ready_victim = dequeue(&caller->ready_queue);
+    while (ready_victim != NULL){
+        char victim_name[100];
+        uint32_t byte_data = 0;
+        int idx = 0;
+        while(byte_data != -1){
+            libread(ready_victim, memrg, idx, &byte_data);
+            victim_name[idx]= byte_data;
+            if(byte_data == -1) victim_name[idx]='\0';
+            idx++;
+        }
+
+        if(strcmp(proc_name, victim_name) == 0){
+            printf("###############=VICTIM NAME: %s =###############\n", victim_name);
+            printf("Killing process with pid: %d \n", ready_victim->pid);  //print to debug 
+            libfree(ready_victim, memrg);             //free the allocate memory
+            free(ready_victim);                       //free the all structure of victim process
+            printf("###############======DONE KILLING======###############\n");
+        }
+        else{
+            enqueue(caller->ready_queue, ready_victim);
+        }
+
+        victim = dequeue(&caller->ready_queue);  // tiếp tục vòng lặp
+    }
 #endif
     
     
