@@ -3,6 +3,7 @@
         "pthread.h": "c",
         "stdio.h": "c",
         "os-cfg.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "common.h": "c"
     }
 }

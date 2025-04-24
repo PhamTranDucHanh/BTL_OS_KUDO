@@ -168,13 +168,16 @@
  {
   pthread_mutex_lock(&mmvm_lock);
    /* TODO Implement allocation on vm area 0 */
+#ifdef IODUMP
    printf("===== PHYSICAL MEMORY AFTER ALLOCATION =====\n");
+#endif
    int addr;
- 
+
    /* By default using vmaid = 0 */
    pthread_mutex_unlock(&mmvm_lock);
    int a = __alloc(proc, 0, reg_index, size, &addr);
    pthread_mutex_lock(&mmvm_lock);
+#ifdef IODUMP
    printf("PID: %d - Region: %d Addresss: %X, size: %d byte\n", proc->pid, reg_index, addr, size);
    print_pgtbl(proc, 0, -1);
    int i = 0;
@@ -183,6 +186,7 @@
     i++;
    }
    printf("===================================================================\n");
+#endif
    pthread_mutex_unlock(&mmvm_lock);
    return a;
  }
@@ -198,6 +202,7 @@
     /* TODO Implement free region */
     int a = __free(proc, 0, reg_index);
     pthread_mutex_lock(&mmvm_lock);
+#ifdef IODUMP
     printf("===== PHYSICAL MEMORY AFTER DEALLOCATION =====\n");
     printf("PID = %d - Region = %d\n", proc->pid, reg_index);
     print_pgtbl(proc, 0, -1);
@@ -207,6 +212,7 @@
       i++;
      }
      printf("===================================================================\n");
+#endif
      pthread_mutex_unlock(&mmvm_lock);
 
     /* By default using vmaid = 0 */
@@ -394,9 +400,10 @@
      uint32_t *destination)
  {
    BYTE data;
+#ifdef IODUMP
    printf("===== PHYSICAL MEMORY AFTER READING =====\n");
+#endif
    int val = __read(proc, 0, source, offset, &data);
-   
  
    /* TODO update result of reading action*/
    // destination
@@ -416,9 +423,10 @@
    MEMPHY_dump(proc->mram);
  #endif
  
-
+#ifdef IODUMP
  printf("==================================================================\n");
- 
+#endif
+
    return val;
  }
  
@@ -449,7 +457,9 @@
      uint32_t destination, // Index of destination register
      uint32_t offset)
  {
+#ifdef IODUMP
   printf("===== PHYSICAL MEMORY AFTER WRITING =====\n");
+#endif
   int a = __write(proc, 0, destination, offset, data);
  #ifdef IODUMP
    printf("write region=%d offset=%d value=%d\n", destination, offset, data);
@@ -464,8 +474,9 @@
    MEMPHY_dump(proc->mram);
  #endif
  
+ #ifdef IODUMP
  printf("=========================================================================\n");
-   
+#endif
    
    
    return a;
