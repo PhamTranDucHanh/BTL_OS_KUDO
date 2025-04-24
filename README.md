@@ -11,6 +11,4 @@ PS: Sau khi fork, nhớ gửi *pull request* và kèm theo đặc tả nội dun
 
 ---
 
-Đã cập nhật code của bạn Thảo Vân: `queue.c`, `sched.c`, và `queue.h`.
-
-2 file phần mem: `mm-memphy.c` và `mm-vm.c`.
+Xong.
