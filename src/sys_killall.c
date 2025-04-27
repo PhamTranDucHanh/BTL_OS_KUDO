@@ -49,7 +49,7 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
     uint32_t data;
     printf("~~~~~~~~~~~~~~~~~Syscall killall~~~~~~~~~~~~~~~~~\n");
     //hardcode for demo only
-    uint32_t memrg = regs->a1;      //cái memrg này hiện tại là bao nhiêu cũng được vì khi mảng các region mới (toàn 0) thì thành ra nó lại luôn truy cập được vào đầu
+    uint32_t memrg = regs->a1;      
     /* TODO: Get name of the target proc */
     //proc_name = libread..
 
@@ -74,49 +74,24 @@ int __sys_killall(struct pcb_t *caller, struct sc_regs* regs)
         }
     }
     printf("[Caller PID: %d]The procname retrieved from memregionid %d is \"%s\"\n", caller->pid, memrg, proc_name);
+    if(strcmp(proc_name, caller->prog_name) == 0){          //suicide
+        fprintf(stderr, "[Sycall fail] Cannot suicide!\n");
+        return -1;
+    }
     // /* TODO: Traverse proclist to terminate the proc
     //  *       stcmp to check the process match proc_name
     //  */
     // //caller->running_list
     // //caller->mlq_ready_queu
-
     pthread_mutex_lock(&queue_lock);
     struct pcb_t * victim = dequeue(&caller->running_list);
     pthread_mutex_unlock(&queue_lock);
     while (victim != NULL){
-        int err = 0;
-        char victim_name[100];
-        uint32_t byte_data = 0;
-        int idx = 0;
-        while(byte_data != -1){
-            if(!has_allocated_memory(victim)){
-                fprintf(stderr, "[Victim PID: %d] No allocated.\n", victim->pid);
-                err = 1;
-                break;
-            }
-            if(!(victim->mm->symrgtbl[memrg].rg_end - victim->mm->symrgtbl[memrg].rg_start)){
-                fprintf(stderr, "[Victim PID: %d] Null region.\n", victim->pid);
-                err = 1;
-                break;
-            }
-            libread(victim, memrg, idx, &byte_data);
-            victim_name[idx]= byte_data;
-            if(byte_data == -1) victim_name[idx]='\0';
-            idx++;
-            if (idx >= 100) {                 //catch lỗi không có ký tự kết thúc trong region.
-                fprintf(stderr, "[Victim PID: %d] Could not find terminating byte (-1) in region name.\n", victim->pid);
-                err  = 1;
-                break;
-            }
-        }
-
-        if (!err) printf("[Victim PID: %d]The procname retrieved from memregionid %d is \"%s\"\n", victim->pid, memrg, victim_name);
-        if (strcmp(proc_name, victim_name) == 0 && !err) {
+        if (strcmp(proc_name, victim->prog_name) == 0 ) {
             printf("Killing process with pid: %d \n", victim->pid);
-        
-            libfree(victim, memrg);   //free the allocate memory
+            if(has_allocated_memory(victim)) libfree(victim, memrg);   //free the allocate memory
             free(victim);             //free the all structure of victim process
-        
+      
         } 
         else{
             pthread_mutex_lock(&queue_lock);
@@ -141,37 +116,9 @@ for(int prio = 0; prio < MAX_PRIO; prio++){                 //traverse mlq_queue
     struct pcb_t * mlq_victim = dequeue(&caller->mlq_ready_queue[prio]);
     pthread_mutex_unlock(&queue_lock);
     while (mlq_victim != NULL){
-        int err = 0;
-        char victim_name[100];
-        uint32_t byte_data = 0;
-        int idx = 0;
-        while(byte_data != -1){
-            if(!has_allocated_memory(mlq_victim)){
-                fprintf(stderr, "[Victim PID: %d] No allocated.\n", mlq_victim->pid);
-                err = 1;
-                break;
-            }
-            if(!(mlq_victim->mm->symrgtbl[memrg].rg_end - mlq_victim->mm->symrgtbl[memrg].rg_start)){
-                fprintf(stderr, "[Victim PID: %d] Null region.\n", mlq_victim->pid);
-                err = 1;
-                break;
-            }
-            libread(mlq_victim, memrg, idx, &byte_data);        //read the mem context (like how we do with proc_name)
-            victim_name[idx]= byte_data;
-            if(byte_data == -1) victim_name[idx]='\0';
-            idx++;
-            if (idx >= 100) {                 //catch lỗi không có ký tự kết thúc trong region.
-                fprintf(stderr, "[Victim PID: %d] Could not find terminating byte (-1) in region name.\n", mlq_victim->pid);
-                err = 1;
-                break;
-            }
-        }
-
-        if (!err) printf("[Victim PID: %d]The procname retrieved from memregionid %d is \"%s\"\n", mlq_victim->pid, memrg, victim_name);
-
-        if(strcmp(proc_name, victim_name) == 0 && !err){
+        if(strcmp(proc_name, mlq_victim->prog_name) == 0 ){
             printf("Killing process with pid: %d \n", mlq_victim->pid);  //print to debug 
-            libfree(mlq_victim, memrg);             //free the allocate memory
+            if(has_allocated_memory(victim)) libfree(mlq_victim, memrg);             //free the allocate memory
             free(mlq_victim);                       //free the all structure of victim process
         }
         else{
@@ -194,32 +141,14 @@ for(int prio = 0; prio < MAX_PRIO; prio++){
 pthread_mutex_unlock(&queue_lock);
 #else
 //Tương tự như trường hợp running queue thôi
+    pthread_mutex_lock(&queue_lock);
     struct pcb_t * ready_victim = dequeue(&caller->ready_queue);
+    pthread_mutex_unlock(&queue_lock);
     while (ready_victim != NULL){
-        char victim_name[100];
-        uint32_t byte_data = 0;
-        int idx = 0;
-        while(byte_data != -1){
-            if(!has_allocated_memory(ready_victim)){
-                fprintf(stderr, "[Victim] No allocated.\n");
-                break;
-            }
-            libread(ready_victim, memrg, idx, &byte_data);
-            victim_name[idx]= byte_data;
-            if(byte_data == -1) victim_name[idx]='\0';
-            idx++;
-            if (idx >= 100) {                 //catch lỗi không có ký tự kết thúc trong region.
-                fprintf(stderr, "[Victim] Could not find terminating byte (-1) in region name.\n");
-            }
-        }
-
-        printf("[Victim PID: %d]The procname retrieved from memregionid %d is \"%s\"\n", ready_victim->pid, memrg, victim_name);
-
-        if(strcmp(proc_name, victim_name) == 0){
+        if(strcmp(proc_name, ready_victim->prog_name) == 0){
             printf("Killing process with pid: %d \n", ready_victim->pid);  //print to debug 
-            libfree(ready_victim, memrg);             //free the allocate memory
+            //libfree(ready_victim, memrg);             //free the allocate memory
             free(ready_victim);                       //free the all structure of victim process
-            printf("###############======DONE KILLING======###############\n");
         }
         else{
             enqueue(&tmp_ready_queue, ready_victim);
@@ -232,7 +161,7 @@ pthread_mutex_unlock(&queue_lock);
         enqueue(&caller->ready_queue, put_back3);
     }
 #endif
-    
+
 printf("~~~~~~~~~~~~~~~End killall sucessfully~~~~~~~~~~~~~~~\n");
     return 0; 
 }

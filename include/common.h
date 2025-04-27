@@ -79,6 +79,9 @@ struct pcb_t
 	uint32_t pid;		 // PID
 	uint32_t priority;	 // Default priority, this legacy process based (FIXED)
 	char path[100];
+	/*Student define*/
+	char prog_name[100];  //lưu tên của programn gốc.
+	/*Student define*/
 	struct code_seg_t *code; // Code segment
 	addr_t regs[10];	 // Registers, store address of allocated regions
 	uint32_t pc;		 // Program pointer, point to the next instruction

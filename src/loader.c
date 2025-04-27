@@ -98,6 +98,18 @@ struct pcb_t * load(const char * path) {
 			exit(1);
 		}
 	}
+	    	/*Lưu tên chương trình vào struct pcb_t luôn, phục vụ syscall*/
+			const char *progname = strrchr(path, '/');
+			int idx = 0;
+			if (progname != NULL) {
+				progname++; // Bỏ qua dấu '/'
+				while (progname[idx] != '\0') {
+					proc->prog_name[idx] = progname[idx];
+					idx++;
+				}
+				proc->path[idx] = '\0'; // Kết thúc chuỗi
+			}
+			/*==============================*/
 	return proc;
 }
 
