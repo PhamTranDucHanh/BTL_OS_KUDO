@@ -45,59 +45,65 @@ struct cpu_args {
 
 
 static void * cpu_routine(void * args) {
-	struct timer_id_t * timer_id = ((struct cpu_args*)args)->timer_id;
-	int id = ((struct cpu_args*)args)->id;
-	/* Check for new process in ready queue */
-	int time_left = 0;
-	struct pcb_t * proc = NULL;
-	while (1) {
-		/* Check the status of current process */
-		if (proc == NULL) {
-			/* No process is running, the we load new process from
-		 	* ready queue */
-			proc = get_proc();
-			if (proc == NULL) {
-                           next_slot(timer_id);
-                           continue; /* First load failed. skip dummy load */
-                        }
-		}else if (proc->pc == proc->code->size) {
-			/* The porcess has finish it job */
-			printf("\tCPU %d: Processed %2d has finished\n",
-				id ,proc->pid);
-			free(proc);
-			proc = get_proc();
-			time_left = 0;
-		}else if (time_left == 0) {
-			/* The process has done its job in current time slot */
-			printf("\tCPU %d: Put process %2d to run queue\n",
-				id, proc->pid);
-			put_proc(proc);
-			proc = get_proc();
-		}
-		
-		/* Recheck process status after loading new process */
-		if (proc == NULL && done) {
-			/* No process to run, exit */
-			printf("\tCPU %d stopped\n", id);
-			break;
-		}else if (proc == NULL) {
-			/* There may be new processes to run in
-			 * next time slots, just skip current slot */
-			next_slot(timer_id);
-			continue;
-		}else if (time_left == 0) {
-			printf("\tCPU %d: Dispatched process %2d\n",
-				id, proc->pid);
-			time_left = time_slot;
-		}
-		
-		/* Run current process */
-		run(proc);
-		time_left--;
-		next_slot(timer_id);
-	}
-	detach_event(timer_id);
-	pthread_exit(NULL);
+    struct timer_id_t * timer_id = ((struct cpu_args*)args)->timer_id;
+    int id = ((struct cpu_args*)args)->id;
+    /* Check for new process in ready queue */
+    int time_left = 0;
+    struct pcb_t * proc = NULL;
+    
+    while (1) {
+        /* Check the status of current process */
+        if (proc == NULL) {
+            /* No process is running, then we load new process from ready queue */
+            proc = get_proc();
+            
+            // If no process is available and loading is done, check if all processes are finished
+            if (proc == NULL && done) {
+                // Check if there are any processes still in any queue
+                if (queue_empty() == 1) {  // Changed from "if (done)" to proper queue check
+                    printf("\tCPU %d stopped: No more processes to run\n", id);
+                    break;
+                }
+            }
+            
+            if (proc == NULL) {
+                next_slot(timer_id);
+                continue; /* Skip dummy load */
+            }
+        } else if (proc->pc == proc->code->size) {
+            /* The process has finished its job */
+            printf("\tCPU %d: Process %2d has finished\n", id, proc->pid);
+            free(proc);
+            proc = get_proc();
+            time_left = 0;
+        } else if (time_left == 0) {
+            /* The process has done its job in current time slot */
+            printf("\tCPU %d: Put process %2d to run queue\n", id, proc->pid);
+            put_proc(proc);
+            proc = get_proc();
+        }
+        
+        /* Recheck process status after loading new process */
+        if (proc == NULL && done && queue_empty() == 1) {  // Modified condition
+            /* No process to run, exit */
+            printf("\tCPU %d stopped\n", id);
+            break;
+        } else if (proc == NULL) {
+            /* There may be new processes to run in next time slots, just skip current slot */
+            next_slot(timer_id);
+            continue;
+        } else if (time_left == 0) {
+            printf("\tCPU %d: Dispatched process %2d\n", id, proc->pid);
+            time_left = time_slot;
+        }
+        
+        /* Run current process */
+        run(proc);
+        time_left--;
+        next_slot(timer_id);
+    }
+    detach_event(timer_id);
+    pthread_exit(NULL);
 }
 
 static void * ld_routine(void * args) {

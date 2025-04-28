@@ -10,9 +10,9 @@ write 110 2 0
 write 104 2 1
 write 117 2 2
 write -1 2 3
-syscall 101 1
-calc
 syscall 101 2
+calc
+syscall 101 1
 calc
 calc
 calc
